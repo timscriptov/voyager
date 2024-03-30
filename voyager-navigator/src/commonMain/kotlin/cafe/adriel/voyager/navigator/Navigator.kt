@@ -1,15 +1,8 @@
 package cafe.adriel.voyager.navigator
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.currentCompositeKeyHash
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.SaveableStateHolder
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
-import androidx.compose.runtime.staticCompositionLocalOf
 import cafe.adriel.voyager.core.annotation.InternalVoyagerApi
 import cafe.adriel.voyager.core.concurrent.ThreadSafeMap
 import cafe.adriel.voyager.core.concurrent.ThreadSafeSet
@@ -20,12 +13,7 @@ import cafe.adriel.voyager.core.lifecycle.rememberScreenLifecycleOwner
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.stack.Stack
 import cafe.adriel.voyager.core.stack.toMutableStateStack
-import cafe.adriel.voyager.navigator.internal.ChildrenNavigationDisposableEffect
-import cafe.adriel.voyager.navigator.internal.LocalNavigatorStateHolder
-import cafe.adriel.voyager.navigator.internal.NavigatorBackHandler
-import cafe.adriel.voyager.navigator.internal.NavigatorDisposableEffect
-import cafe.adriel.voyager.navigator.internal.StepDisposableEffect
-import cafe.adriel.voyager.navigator.internal.rememberNavigator
+import cafe.adriel.voyager.navigator.internal.*
 import cafe.adriel.voyager.navigator.lifecycle.NavigatorKey
 
 public typealias NavigatorContent = @Composable (navigator: Navigator) -> Unit
@@ -109,7 +97,6 @@ public class Navigator @InternalVoyagerApi constructor(
     public val disposeBehavior: NavigatorDisposeBehavior,
     public val parent: Navigator? = null
 ) : Stack<Screen> by screens.toMutableStateStack(minSize = 1) {
-
     public val level: Int =
         parent?.level?.inc() ?: 0
 
@@ -150,6 +137,16 @@ public class Navigator @InternalVoyagerApi constructor(
                 stateHolder.SaveableStateProvider(stateKey, content)
             }
         )
+    }
+
+    public fun popWithResult(requestCode: Int, resultCode: Int, data: Any?) {
+        val prev = if (items.size < 2) {
+            null
+        } else {
+            items[items.size - 2]
+        }
+        prev?.onResult(requestCode, resultCode, data)
+        pop()
     }
 
     public fun popUntilRoot() {

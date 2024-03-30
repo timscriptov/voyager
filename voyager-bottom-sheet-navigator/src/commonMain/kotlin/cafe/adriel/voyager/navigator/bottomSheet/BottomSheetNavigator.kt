@@ -3,22 +3,10 @@ package cafe.adriel.voyager.navigator.bottomSheet
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.ModalBottomSheetDefaults
-import androidx.compose.material.ModalBottomSheetLayout
-import androidx.compose.material.ModalBottomSheetState
-import androidx.compose.material.ModalBottomSheetValue
-import androidx.compose.material.SwipeableDefaults
-import androidx.compose.material.contentColorFor
-import androidx.compose.material.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ProvidableCompositionLocal
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.contentColorFor
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -29,6 +17,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.stack.Stack
 import cafe.adriel.voyager.navigator.CurrentScreen
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.bottomSheet.compositions.*
 import cafe.adriel.voyager.navigator.bottomSheet.internal.BottomSheetNavigatorBackHandler
 import cafe.adriel.voyager.navigator.compositionUniqueId
 import kotlinx.coroutines.CoroutineScope
@@ -39,7 +28,7 @@ public typealias BottomSheetNavigatorContent = @Composable (bottomSheetNavigator
 public val LocalBottomSheetNavigator: ProvidableCompositionLocal<BottomSheetNavigator> =
     staticCompositionLocalOf { error("BottomSheetNavigator not initialized") }
 
-@ExperimentalMaterialApi
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 public fun BottomSheetNavigator(
     modifier: Modifier = Modifier,
@@ -47,9 +36,8 @@ public fun BottomSheetNavigator(
     scrimColor: Color = ModalBottomSheetDefaults.scrimColor,
     sheetShape: Shape = MaterialTheme.shapes.large,
     sheetElevation: Dp = ModalBottomSheetDefaults.Elevation,
-    sheetBackgroundColor: Color = MaterialTheme.colors.surface,
+    sheetBackgroundColor: Color = MaterialTheme.colorScheme.surface,
     sheetContentColor: Color = contentColorFor(sheetBackgroundColor),
-    sheetGesturesEnabled: Boolean = true,
     skipHalfExpanded: Boolean = true,
     animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
     key: String = compositionUniqueId(),
@@ -86,7 +74,6 @@ public fun BottomSheetNavigator(
                 sheetElevation = sheetElevation,
                 sheetBackgroundColor = sheetBackgroundColor,
                 sheetContentColor = sheetContentColor,
-                sheetGesturesEnabled = sheetGesturesEnabled,
                 sheetContent = {
                     BottomSheetNavigatorBackHandler(bottomSheetNavigator, sheetState, hideOnBackPress)
                     sheetContent(bottomSheetNavigator)
@@ -99,33 +86,67 @@ public fun BottomSheetNavigator(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
-public class BottomSheetNavigator @InternalVoyagerApi constructor(
+public class BottomSheetNavigator @OptIn(ExperimentalMaterial3Api::class)
+@InternalVoyagerApi constructor(
     private val navigator: Navigator,
     private val sheetState: ModalBottomSheetState,
     private val coroutineScope: CoroutineScope
 ) : Stack<Screen> by navigator {
+    private val results = mutableStateMapOf<Int, OnResult?>()
 
+    public data class OnResult(
+        val resultCode: Int,
+        val data: Any?,
+    )
+
+    @OptIn(ExperimentalMaterial3Api::class)
     public val isVisible: Boolean
         get() = sheetState.isVisible
 
+    @OptIn(ExperimentalMaterial3Api::class)
     public fun show(screen: Screen) {
         coroutineScope.launch {
             replaceAll(screen)
-            sheetState.show()
+            sheetState.expand()
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     public fun hide() {
         coroutineScope.launch {
             if (isVisible) {
                 sheetState.hide()
                 replaceAll(HiddenBottomSheetScreen)
-            } else if (sheetState.targetValue == ModalBottomSheetValue.Hidden) {
+            } else if (!sheetState.isVisible) {
                 // Swipe down - sheetState is already hidden here so `isVisible` is false
                 replaceAll(HiddenBottomSheetScreen)
             }
         }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    public fun hideWithResult(requestCode: Int, resultCode: Int, data: Any?) {
+        coroutineScope.launch {
+            results[requestCode] = OnResult(resultCode, data)
+            sheetState.hide()
+            replaceAll(HiddenBottomSheetScreen)
+        }
+    }
+
+    @Composable
+    public fun getResult(requestCode: Int): State<OnResult?> {
+        val result = results[requestCode]
+        val resultState = remember(requestCode, result) {
+            derivedStateOf {
+                results -= requestCode
+                result
+            }
+        }
+        return resultState
+    }
+
+    public fun clearResults() {
+        results.clear()
     }
 
     @Composable

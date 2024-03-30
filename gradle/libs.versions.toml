@@ -1,27 +1,28 @@
 [versions]
-plugin-android = "8.1.1"
+plugin-android = "8.2.2"
 plugin-ktlint = "11.5.1"
 plugin-maven = "0.25.3"
-plugin-multiplatform-compose = "1.6.0"
+plugin-multiplatform-compose = "1.6.1"
 plugin-binaryCompatibilityValidator = "0.13.2"
 plugin-atomicfu = "0.23.1"
 
-coroutines = "1.8.0-RC2"
-kotlin = "1.9.21"
+coroutines = "1.8.0"
+kotlin = "1.9.23"
 kodein = "7.21.2"
 koin = "3.5.3"
 koin-compose = "1.1.2"
 hilt = "2.49"
 leakCanary = "2.9.1"
 appCompat = "1.6.1"
-lifecycle = "2.6.1"
-composeCompiler = "1.5.7"
-composeActivity = "1.7.2"
-composeAnimation = "1.5.0"
-composeMaterial = "1.5.0"
-composeRuntime = "1.5.0"
-composeUI = "1.5.0"
-rxjava = "3.1.5"
+lifecycle = "2.7.0"
+composeCompiler = "1.5.11"
+composeActivity = "1.8.2"
+composeAnimation = "1.6.4"
+composeMaterial = "1.6.4"
+composeMaterial3 = "1.2.1"
+composeRuntime = "1.6.4"
+composeUI = "1.6.4"
+rxjava = "3.1.8"
 
 junit = "5.10.0"
 
@@ -56,6 +57,7 @@ compose-runtimeLiveData = { module = "androidx.compose.runtime:runtime-livedata"
 compose-ui = { module = "androidx.compose.ui:ui", version.ref = "composeUI" }
 compose-animation = { module = "androidx.compose.animation:animation", version.ref = "composeAnimation" }
 compose-material = { module = "androidx.compose.material:material", version.ref = "composeMaterial" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "composeMaterial3" }
 compose-materialIcons = { module = "androidx.compose.material:material-icons-core", version.ref = "composeMaterial" }
 compose-activity = { module = "androidx.activity:activity-compose", version.ref = "composeActivity" }
 rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava" }
